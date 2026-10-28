@@ -1,0 +1,12 @@
+{
+  "name": "saipa-news-reel2",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "render": "hyperframes render --output renders/saipa-reel.mp4",
+    "lint": "hyperframes lint"
+  },
+  "devDependencies": {
+    "hyperframes": "0.8.214"
+  }
+}
