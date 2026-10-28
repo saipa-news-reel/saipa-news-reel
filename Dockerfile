@@ -13,8 +13,9 @@ ENV CHROME_BIN=/usr/bin/chromium
 
 WORKDIR /app
 
-COPY . .
-
+COPY package*.json ./
 RUN npm install
+
+COPY . .
 
 CMD ["sh", "-c", "npx hyperframes --help"]
