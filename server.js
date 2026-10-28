@@ -34,7 +34,7 @@ const server = http.createServer((req, res) => {
 
     const child = spawn('npx', [
       'hyperframes', 'render',
-      '--low-memory-mode', '--workers', '1',
+      '--low-memory-mode', '--workers', '1', '--fps', '15',
       '--output', OUT
     ], { cwd: __dirname });
 
