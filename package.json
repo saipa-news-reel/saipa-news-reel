@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "render": "hyperframes render --output renders/saipa-reel.mp4",
-    "lint": "hyperframes lint"
+    "lint": "hyperframes lint",
+    "start": "node server.js"
   },
   "devDependencies": {
     "hyperframes": "0.8.214"

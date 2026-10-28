@@ -18,4 +18,4 @@ RUN npm install
 
 COPY . .
 
-CMD ["sh", "-c", "npx hyperframes --help"]
+CMD ["npm", "start"]
