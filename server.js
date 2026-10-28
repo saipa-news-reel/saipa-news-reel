@@ -34,9 +34,9 @@ const server = http.createServer((req, res) => {
 
     const child = spawn('npx', [
       'hyperframes', 'render',
-      '--low-memory-mode', '--workers', '1', '--fps', '15',
+      '--low-memory-mode', '--workers', '1', '--fps', '15', '--resume', '--keep-segments',
       '--output', OUT
-    ], { cwd: __dirname });
+    ], { cwd: __dirname, env: { ...process.env, HF_SEGMENTED_CAPTURE: 'true' } });
 
     child.stdout.on('data', d => log += d.toString());
     child.stderr.on('data', d => log += d.toString());
