@@ -44,6 +44,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && req.url === '/download') {
+    if (!TOKEN || req.headers.authorization !== `Bearer ${TOKEN}`) {
+      res.writeHead(401);
+      return res.end('Unauthorized');
+    }
+    const file = path.join(__dirname, 'renders', 'saipa-reel.mp4');
+    if (!fs.existsSync(file)) {
+      res.writeHead(404);
+      return res.end('No rendered video yet');
+    }
+    res.writeHead(200, {
+      'Content-Type': 'video/mp4',
+      'Content-Disposition': 'attachment; filename="saipa-reel.mp4"'
+    });
+    return fs.createReadStream(file).pipe(res);
+  }
+
   res.writeHead(404);
   res.end('Not found');
 });
