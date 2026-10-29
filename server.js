@@ -5,52 +5,58 @@ const path = require('path');
 
 const PORT = process.env.PORT || 10000;
 const TOKEN = process.env.RENDER_TOKEN || '';
+const OUT = path.join(__dirname, 'renders', 'saipa-reel.mp4');
+let job = 'idle';
+let log = '';
 
 const server = http.createServer((req, res) => {
   if (req.url === '/health') {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
+    res.writeHead(200);
     return res.end('ok');
   }
 
+  if (req.headers.authorization !== `Bearer ${TOKEN}` || !TOKEN) {
+    res.writeHead(401);
+    return res.end('Unauthorized');
+  }
+
   if (req.method === 'POST' && req.url === '/render') {
-    if (!TOKEN || req.headers.authorization !== `Bearer ${TOKEN}`) {
-      res.writeHead(401);
-      return res.end('Unauthorized');
+    if (job === 'running') {
+      res.writeHead(409);
+      return res.end('Render already running');
     }
 
-    const output = path.join(__dirname, 'renders', 'saipa-reel.mp4');
-    fs.mkdirSync(path.dirname(output), { recursive: true });
+    fs.mkdirSync(path.dirname(OUT), { recursive: true });
+    job = 'running';
+    log = '';
+    res.writeHead(202, { 'Content-Type': 'text/plain' });
+    res.end('Render started. Check /status');
 
     const child = spawn('npx', [
       'hyperframes', 'render',
-      '--low-memory-mode',
-      '--workers', '1',
-      '--output', output
+      '--low-memory-mode', '--workers', '1',
+      '--output', OUT
     ], { cwd: __dirname });
 
-    let log = '';
     child.stdout.on('data', d => log += d.toString());
     child.stderr.on('data', d => log += d.toString());
-
+    child.on('error', e => {
+      log += e.message;
+      job = 'failed';
+    });
     child.on('close', code => {
-      if (code === 0 && fs.existsSync(output)) {
-        res.writeHead(200, {'Content-Type': 'text/plain'});
-        res.end('Render complete: ' + output);
-      } else {
-        res.writeHead(500, {'Content-Type': 'text/plain'});
-        res.end('Render failed:\n' + log.slice(-5000));
-      }
+      job = code === 0 && fs.existsSync(OUT) ? 'done' : 'failed';
     });
     return;
   }
 
+  if (req.method === 'GET' && req.url === '/status') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    return res.end('Status: ' + job + '\n' + log.slice(-3000));
+  }
+
   if (req.method === 'GET' && req.url === '/download') {
-    if (!TOKEN || req.headers.authorization !== `Bearer ${TOKEN}`) {
-      res.writeHead(401);
-      return res.end('Unauthorized');
-    }
-    const file = path.join(__dirname, 'renders', 'saipa-reel.mp4');
-    if (!fs.existsSync(file)) {
+    if (!fs.existsSync(OUT)) {
       res.writeHead(404);
       return res.end('No rendered video yet');
     }
@@ -58,13 +64,11 @@ const server = http.createServer((req, res) => {
       'Content-Type': 'video/mp4',
       'Content-Disposition': 'attachment; filename="saipa-reel.mp4"'
     });
-    return fs.createReadStream(file).pipe(res);
+    return fs.createReadStream(OUT).pipe(res);
   }
 
   res.writeHead(404);
   res.end('Not found');
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server listening on ${PORT}`);
-});
+server.listen(PORT, '0.0.0.0', () => console.log('Server listening on ' + PORT));
