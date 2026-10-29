@@ -36,7 +36,7 @@ const server = http.createServer((req, res) => {
       'hyperframes', 'render',
       '--low-memory-mode', '--workers', '1', '--fps', '15', '--resume', '--keep-segments',
       '--output', OUT
-    ], { cwd: __dirname, env: { ...process.env, HF_SEGMENTED_CAPTURE: 'true' } });
+    ], { cwd: __dirname, env: { ...process.env, HF_SEGMENTED_CAPTURE: 'true', HF_SEGMENT_FRAMES: '30' } });
 
     child.stdout.on('data', d => log += d.toString());
     child.stderr.on('data', d => log += d.toString());
